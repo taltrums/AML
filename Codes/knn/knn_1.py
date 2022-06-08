@@ -21,12 +21,29 @@ def euclidean_dist(instance1, instance2, length):
         distance += pow((instance1[x]-instance2[x]),2)
     return math.sqrt(distance)
 
-def getNeighbors(train_set, test_instance, k):
+def normalEuclidean_dist(instance1, instance2, length):
+    distance = 0
+    for x in range(length):
+        a = float(pow((instance1[x]-instance2[x]),2))
+        distance += pow(((instance1[x]-instance2[x])/a),2)
+    return math.sqrt(distance)
+
+def cosineSimilarity(data_1, data_2):
+    dot = np.dot(data_1, data_2[:-1])
+    norm_data_1 = np.linalg.norm(data_1)
+    norm_data_2 = np.linalg.norm(data_2[:-1])
+    cos = dot / (norm_data_1 * norm_data_2)
+    return (1-cos)
+
+
+def getNeighbors(trainingSet, testInstance, k):
     distances = []
-    length = len(test_instance)-1
-    for x in range(len(train_set)):
-        dist = euclidean_dist(train_set[x], test_instance, length)
-        distances.append((train_set[x], dist))
+    length = len(testInstance)-1
+    for x in range(len(trainingSet)):
+        #dist = cosineSimilarity(testInstance, trainingSet[x])
+        #dist = NeuclideanDistance(testInstance, trainingSet[x], length)
+        dist = euclideanDistance(testInstance, trainingSet[x], length)
+        distances.append((trainingSet[x], dist))
     distances.sort(key=operator.itemgetter(1))
     neighbors = []
     for x in range(k):
@@ -53,17 +70,24 @@ def getAccuracy(test_set, prediction):
 
 
 def main():
-    train_set=[]
-    test_set=[]
+    # prepare data
+    trainingSet=[]
+    testSet=[]
     split = 0.67
-    prediction=[]
-    load_dataset('iris.csv', split, train_set, test_set)
-    for x in range(len(test_set)):
-        neighbors = getNeighbors(train_set, test_set[x], 3)
+    load_dataset('iris.csv', split, trainingSet, testSet)
+    print ('\n Number of Training data: ' + (repr(len(trainingSet))))
+    print (' Number of Test Data: ' + (repr(len(testSet))))
+    # generate predictions
+    predictions=[]
+    k = 3
+    print('\n The predictions are: ')
+    for x in range(len(testSet)):
+        neighbors = getNeighbors(trainingSet, testSet[x], k)
         result = getResponse(neighbors)
-        prediction.append(result)
-    print('Accuracy', getAccuracy(test_set, prediction))
-
+        predictions.append(result)
+        print(' predicted=' + repr(result) + ', actual=' + repr(testSet[x][-1]))
+    accuracy = getAccuracy(testSet, predictions)
+    print('\n The Accuracy is: ' + repr(accuracy) + '%')
     
 main()
 
